@@ -1,36 +1,43 @@
-# [Project name]
+# SecureLine ATM
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+SecureLine ATM is a polished ATM interface for the CODSOFT Java Development Internship Task 3, with a Java REST backend powering secure account and transaction operations.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the Java API server (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `./backend/compile.sh` — compile the Java domain model and REST server
+- Required env: `PORT` is supplied by the API workflow; the Java server defaults to `8080`
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
+- API: Java 17+ `HttpServer` REST service
+- ATM domain: Java OOP (`ATM`, `BankAccount`, `Transaction`)
+- Frontend: React + Vite + TypeScript
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `backend/src/main/java/com/secureline/atm/` — Java ATM domain model and dependency-free REST server
+- `artifacts/secureline-atm/` — React/Vite frontend
+- `lib/api-spec/openapi.yaml` — source of truth for the frontend/backend API contract
+- `artifacts/api-server/` — API workflow wrapper that launches the Java backend
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Java owns account creation, authentication, sessions, validation, balance mutations, transaction recording, and PIN changes.
+- The web client uses generated API hooks from the OpenAPI contract; it does not contain ATM business rules.
+- The Java server uses the JDK HTTP server and an in-memory store so the internship demo has no external runtime dependencies.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Registration with an initial deposit and username/PIN authentication
+- Deposit, withdrawal, balance enquiry, mini statement, PIN change, and logout
+- Indian Rupee formatting and responsive physical-ATM-inspired presentation
 
 ## User preferences
 

@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Account registration and authentication
+  - name: atm
+    description: ATM account operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,164 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerAccount
+      tags: [auth]
+      summary: Register a new ATM account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid registration data
+  /auth/login:
+    post:
+      operationId: loginAccount
+      tags: [auth]
+      summary: Authenticate an ATM account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid username or PIN
+  /auth/logout:
+    post:
+      operationId: logoutAccount
+      tags: [auth]
+      summary: End the current ATM session
+      responses:
+        "204":
+          description: Session ended
+  /account:
+    get:
+      operationId: getAccount
+      tags: [atm]
+      summary: Get the signed-in account and balance
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401":
+          description: Authentication required
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [atm]
+      summary: Get ATM dashboard summary
+      responses:
+        "200":
+          description: Current dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "401":
+          description: Authentication required
+  /transactions:
+    get:
+      operationId: getTransactions
+      tags: [atm]
+      summary: Get transaction history
+      responses:
+        "200":
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+        "401":
+          description: Authentication required
+  /transactions/deposit:
+    post:
+      operationId: depositMoney
+      tags: [atm]
+      summary: Deposit money into the account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountInput"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResult"
+        "400":
+          description: Invalid amount
+        "401":
+          description: Authentication required
+  /transactions/withdraw:
+    post:
+      operationId: withdrawMoney
+      tags: [atm]
+      summary: Withdraw money from the account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountInput"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResult"
+        "400":
+          description: Invalid amount or insufficient balance
+        "401":
+          description: Authentication required
+  /pin/change:
+    post:
+      operationId: changePin
+      tags: [atm]
+      summary: Change the current account PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PinChangeInput"
+      responses:
+        "200":
+          description: PIN changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid PIN
+        "401":
+          description: Authentication required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +195,118 @@ components:
           type: string
       required:
         - status
+    RegisterInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 24
+        pin:
+          type: string
+          pattern: "^[0-9]{4}$"
+        initialDeposit:
+          type: number
+          minimum: 0
+      required: [username, pin, initialDeposit]
+    LoginInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        pin:
+          type: string
+          pattern: "^[0-9]{4}$"
+      required: [username, pin]
+    AmountInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          exclusiveMinimum: 0
+      required: [amount]
+    PinChangeInput:
+      type: object
+      properties:
+        currentPin:
+          type: string
+          pattern: "^[0-9]{4}$"
+        newPin:
+          type: string
+          pattern: "^[0-9]{4}$"
+      required: [currentPin, newPin]
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        accountNumber:
+          type: string
+        balance:
+          type: number
+        createdAt:
+          type: string
+        lastActivity:
+          type: string
+      required: [id, username, accountNumber, balance, createdAt, lastActivity]
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        account:
+          $ref: "#/components/schemas/Account"
+      required: [token, account]
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [DEPOSIT, WITHDRAWAL, REGISTRATION]
+        amount:
+          type: number
+        balanceAfter:
+          type: number
+        timestamp:
+          type: string
+        description:
+          type: string
+      required: [id, type, amount, balanceAfter, timestamp, description]
+    TransactionResult:
+      type: object
+      properties:
+        message:
+          type: string
+        transaction:
+          $ref: "#/components/schemas/Transaction"
+        account:
+          $ref: "#/components/schemas/Account"
+      required: [message, transaction, account]
+    Dashboard:
+      type: object
+      properties:
+        account:
+          $ref: "#/components/schemas/Account"
+        totalDeposited:
+          type: number
+        totalWithdrawn:
+          type: number
+        transactionCount:
+          type: number
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+      required: [account, totalDeposited, totalWithdrawn, transactionCount, recentTransactions]
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
 

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "SecureLine ATM"
+description = "A professional ATM interface for the CODSOFT Java Development Internship, with registration, secure authentication, deposits, withdrawals, balance enquiries, transaction history, PIN changes, and logout powered by a Java backend."
+version = "1.0.0"
+id = "artifacts/secureline-atm"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23384
+
+[services.development]
+run = "pnpm --filter @workspace/secureline-atm run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/secureline-atm", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/secureline-atm/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23384"
+BASE_PATH = "/"
