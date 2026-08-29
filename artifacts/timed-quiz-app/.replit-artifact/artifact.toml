@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Timed Quiz App"
+description = "A responsive, professional quiz experience with editable sample questions, per-question countdown timers, answer feedback, scoring, results, and restart flow."
+version = "1.0.0"
+id = "artifacts/timed-quiz-app"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21298
+
+[services.development]
+run = "pnpm --filter @workspace/timed-quiz-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/timed-quiz-app", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/timed-quiz-app/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21298"
+BASE_PATH = "/"
